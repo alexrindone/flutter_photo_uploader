@@ -13,7 +13,7 @@ For android, You must have to update minSdkVersion to 21 (or higher). On iOS, li
 ```
 
 ## Example
-
+```
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
@@ -49,6 +49,7 @@ Future<void> main() async {
       ),
   );
 }
+```
 
 ## Issues
 
