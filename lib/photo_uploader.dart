@@ -1,11 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' show join;
-import 'dart:typed_data';
 import 'package:flutter/rendering.dart';
 import 'dart:ui';
 import 'package:path_provider/path_provider.dart';
@@ -14,13 +12,15 @@ import 'crop_preview.dart';
 // A screen that allows users to take a picture using a given camera.
 class TakePictureScreen extends StatefulWidget {
   final CameraDescription camera;
-  final List <CameraDescription> cameras;
+  final List<CameraDescription> cameras;
+  final Function(ui.Image) onUpload;
 
-  const TakePictureScreen({
-    Key key,
-    @required this.camera,
-    @required this.cameras,
-  }) : super(key: key);
+  const TakePictureScreen(
+      {Key key,
+      @required this.camera,
+      @required this.cameras,
+      @required this.onUpload})
+      : super(key: key);
 
   @override
   TakePictureScreenState createState() => TakePictureScreenState();
@@ -57,7 +57,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   @override
   void dispose() {
     // Dispose of the controller when the widget is disposed.
-    _controller.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
@@ -66,151 +66,168 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     final size = MediaQuery.of(context).size;
 
     return SafeArea(
-        child: FutureBuilder<void>(
-          future: _initializeControllerFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              return Container(
-                // this makes preview full height, otherwise black bar
-//                height: MediaQuery.of(context).size.height,
-//                width: MediaQuery.of(context).size.width,
-                  child: FittedBox(
-                    fit: BoxFit.fitWidth,
-                    child: Container(
-                      width: size.width,
-                      height: size.width / _controller.value.aspectRatio,
-                      child: Stack(
-                        children: <Widget>[
-                          CameraPreview(_controller),
-                          Positioned(
-                            width: size.width,
-                            bottom: 70, // probably needs to be fixed later
-                            child: Flex(
-                              direction: Axis.horizontal,
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: <Widget>[
-                                GestureDetector(
-                                  child: Icon(
-                                    Icons.switch_camera,
-                                    color: Colors.white,
-                                    size: 28.0,
-                                  ),
-                                  onTap: () async {
-                                    // toggle the state of the camera from front to back
-                                    // if it was 0, set it to 1, if it was 1, set it to 0
-                                    int toggleIndex = selectedCameraIdx == 0 ? 1 : 0;
-                                    toggleCamera(toggleIndex);
-                                  },
-                                ),
-                                Center(
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    children: <Widget>[
-                                      ClipOval(
-                                        child: Material(
-                                          color: Colors.grey[100], // button color
-                                          child: SizedBox(width: 60, height: 60,),
-                                        ),
-                                      ),
-                                      ClipOval(
-                                        child: Material(
-                                          color: Colors.grey[350], // button color
-                                            child: SizedBox(width: 50, height: 50,)
-                                        ),
-                                      ),
-                                      Opacity(
-                                        opacity: 0.1,
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black,
-                                                blurRadius: 1.0,
-                                                spreadRadius: 1.0,
-                                              )
-                                            ],
-                                          ),
-                                          child: ClipOval(
-                                            child: Material(
-                                                color: Colors.grey[100], // button color
-                                                child: SizedBox(width: 36, height: 36,)
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      ClipOval(
-                                        child: Material(
-                                            color: Colors.grey[100], // button color
-                                            child: InkWell(
-                                              splashColor: Colors.grey[500], // inkwell color
-                                              child: SizedBox(width: 36, height: 36,),
-                                              onTap: () async {
-                                                // Take the Picture in a try / catch block. If anything goes wrong catch the error.
-                                                try {
-                                                  // Ensure that the camera is initialized.
-                                                  await _initializeControllerFuture;
-
-                                                  // Construct the path where the image should be saved using the
-                                                  // pattern package.image
-                                                  final path = join(
-                                                    // Store the picture in the temp directory.
-                                                    // Find the temp directory using the `path_provider` plugin.
-                                                    (await getTemporaryDirectory()).path,
-                                                    '${DateTime.now()}.png',
-                                                  );
-
-                                                  // Attempt to take a picture and log where it's been saved.
-                                                  await _controller.takePicture(path);
-
-                                                  // If the picture was taken, display it on a new screen.
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (context) => DisplayPictureScreen(imagePath: path),
-                                                    ),
-                                                  );
-                                                } catch (e) {
-                                                  // If an error occurs, log the error to the console.
-                                                  print(e);
-                                                }
-                                              },
-                                            ),
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                ),
-                                SizedBox(width: 30,)
-                              ],
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-              );
-            } else {
-              // Otherwise, display a loading indicator.
-              return Material(
-                  child: Center(
-                      child: CircularProgressIndicator()
-                  )
-              );
+      child: FutureBuilder<void>(
+        future: _initializeControllerFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (!_controller.value.isInitialized) {
+              return Container();
             }
-          },
-        ),
+            return Container(
+              child: FittedBox(
+                fit: BoxFit.fitWidth,
+                child: Container(
+                  width: size.width,
+                  height: size.width / _controller.value.aspectRatio,
+                  child: Stack(
+                    children: <Widget>[
+                      CameraPreview(_controller),
+                      Positioned(
+                        width: size.width,
+                        bottom: 70, // probably needs to be fixed later
+                        child: Flex(
+                          direction: Axis.horizontal,
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            GestureDetector(
+                              child: Icon(
+                                Icons.switch_camera,
+                                color: Colors.white,
+                                size: 28.0,
+                              ),
+                              onTap: () async {
+                                // toggle the state of the camera from front to back
+                                // if it was 0, set it to 1, if it was 1, set it to 0
+                                int toggleIndex =
+                                    selectedCameraIdx == 0 ? 1 : 0;
+                                toggleCamera(toggleIndex);
+                              },
+                            ),
+                            Center(
+                                child: Stack(
+                              alignment: Alignment.center,
+                              children: <Widget>[
+                                ClipOval(
+                                  child: Material(
+                                    color: Colors.grey[100], // button color
+                                    child: SizedBox(
+                                      width: 60,
+                                      height: 60,
+                                    ),
+                                  ),
+                                ),
+                                ClipOval(
+                                  child: Material(
+                                      color: Colors.grey[350], // button color
+                                      child: SizedBox(
+                                        width: 50,
+                                        height: 50,
+                                      )),
+                                ),
+                                Opacity(
+                                  opacity: 0.1,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black,
+                                          blurRadius: 1.0,
+                                          spreadRadius: 1.0,
+                                        )
+                                      ],
+                                    ),
+                                    child: ClipOval(
+                                      child: Material(
+                                          color:
+                                              Colors.grey[100], // button color
+                                          child: SizedBox(
+                                            width: 36,
+                                            height: 36,
+                                          )),
+                                    ),
+                                  ),
+                                ),
+                                ClipOval(
+                                  child: Material(
+                                    color: Colors.grey[100], // button color
+                                    child: InkWell(
+                                      splashColor:
+                                          Colors.grey[500], // inkwell color
+                                      child: SizedBox(
+                                        width: 36,
+                                        height: 36,
+                                      ),
+                                      onTap: () async {
+                                        // Take the Picture in a try / catch block. If anything goes wrong catch the error.
+                                        try {
+                                          // Ensure that the camera is initialized.
+                                          await _initializeControllerFuture;
+
+                                          // Construct the path where the image should be saved using the
+                                          // pattern package.image
+                                          final path = join(
+                                            // Store the picture in the temp directory.
+                                            // Find the temp directory using the `path_provider` plugin.
+                                            (await getTemporaryDirectory())
+                                                .path,
+                                            '${DateTime.now()}.png',
+                                          );
+
+                                          // Attempt to take a picture and log where it's been saved.
+                                          await _controller.takePicture(path);
+
+                                          // If the picture was taken, display it on a new screen.
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  DisplayPictureScreen(
+                                                      imagePath: path,
+                                                      onUpload:
+                                                          widget.onUpload),
+                                            ),
+                                          );
+                                        } catch (e) {
+                                          // If an error occurs, log the error to the console.
+                                          print(e);
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )),
+                            SizedBox(
+                              width: 30,
+                            )
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            );
+          } else {
+            // Otherwise, display a loading indicator.
+            return Material(child: Center(child: CircularProgressIndicator()));
+          }
+        },
+      ),
     );
   }
 }
 
 // A widget that displays the picture taken by the user
 class DisplayPictureScreen extends StatelessWidget {
+  final Function(ui.Image) onUpload;
   final String imagePath;
   final GlobalKey<_CustomPainterDraggableState> _globalKey = new GlobalKey();
 
-  DisplayPictureScreen({Key key, this.imagePath}) : super(key: key);
+  DisplayPictureScreen({Key key, this.imagePath, this.onUpload})
+      : super(key: key);
   Future<ui.Image> _loadImage(File file) async {
     final data = await file.readAsBytes();
     return await decodeImageFromList(data);
@@ -219,97 +236,102 @@ class DisplayPictureScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-        child: FutureBuilder(
-            future: _loadImage(File(imagePath)),
-            builder: (BuildContext context, AsyncSnapshot snapshot){
-              if (snapshot.hasData) {
-                ui.Image image = snapshot.data;
-                return Column(
-                  children: <Widget>[
-                    Expanded(
-                      flex: 6,
-                      child: FittedBox(
-                        fit: BoxFit.contain,
-                        child: SizedBox(
-                          width: image.width.toDouble(),
-                          height: image.height.toDouble(),
-                          child: Stack(
-                            children: <Widget>[
-                              CustomPainterDraggable(image: image, globalKey: _globalKey),
-                            ],
-                          ),
+      child: FutureBuilder(
+          future: _loadImage(File(imagePath)),
+          builder: (BuildContext context, AsyncSnapshot snapshot) {
+            if (snapshot.hasData) {
+              ui.Image image = snapshot.data;
+              return Column(
+                children: <Widget>[
+                  Expanded(
+                    flex: 6,
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: SizedBox(
+                        width: image.width.toDouble(),
+                        height: image.height.toDouble(),
+                        child: Stack(
+                          children: <Widget>[
+                            CustomPainterDraggable(
+                                image: image, globalKey: _globalKey),
+                          ],
                         ),
                       ),
                     ),
-                    Container(
-                      height: 60,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          ClipOval(
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                splashColor: Colors.grey[500], // inkwell color
-                                child: Container(
-                                  padding: EdgeInsets.all(2.0),
-                                  decoration: BoxDecoration(
+                  ),
+                  Container(
+                    height: 60,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        ClipOval(
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              splashColor: Colors.grey[500], // inkwell color
+                              child: Container(
+                                padding: EdgeInsets.all(2.0),
+                                decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(100),
-                                    border: Border.all(width: 1, color: Colors.grey[500])
-                                  ),
-                                  child: Icon(
-                                    Icons.delete,
-                                    color: Colors.white,
-                                    size: 28.0
-                                  ),
-                                ),
-                                onTap: () {
-                                 Navigator.pop(context);
-                                },
+                                    border: Border.all(
+                                        width: 1, color: Colors.grey[500])),
+                                child: Icon(Icons.delete,
+                                    color: Colors.white, size: 28.0),
                               ),
+                              onTap: () {
+                                Navigator.pop(context);
+                              },
                             ),
                           ),
-                          SizedBox(width: 30,),
-                          ClipOval(
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                splashColor: Colors.grey[500], // inkwell color
-                                child: Container(
-                                  padding: EdgeInsets.all(2.0),
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(100),
-                                      border: Border.all(width: 1, color: Colors.grey[500])
-                                  ),
-                                  child: Icon(
-                                      Icons.check,
-                                      color: Colors.white,
-                                      size: 28.0
-                                  ),
-                                ),
-                                onTap: () async {
-                                  final image = await this._globalKey.currentState.croppedToImage;
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => CropPreview(
-                                        image: image,
-                                      )
-                                    ),
-                                  );
-                                },
+                        ),
+                        SizedBox(
+                          width: 30,
+                        ),
+                        ClipOval(
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              splashColor: Colors.grey[500], // inkwell color
+                              child: Container(
+                                padding: EdgeInsets.all(2.0),
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(100),
+                                    border: Border.all(
+                                        width: 1, color: Colors.grey[500])),
+                                child: Icon(Icons.check,
+                                    color: Colors.white, size: 28.0),
                               ),
+                              onTap: () async {
+                                final image = await this
+                                    ._globalKey
+                                    .currentState
+                                    .croppedToImage;
+                                final result = await Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => CropPreview(
+                                            image: image,
+                                          )),
+                                );
+                                // as long as we got an image, use the callback function
+                                if (result != null) {
+                                  // result is the ui.Image
+                                  await onUpload(result);
+                                }
+                              },
                             ),
                           ),
-                        ],
-                      ),
-                    )
-                  ],
-                );
-              } else {
-                return Center(child: CircularProgressIndicator());
-              }
-            }),
+                        ),
+                      ],
+                    ),
+                  )
+                ],
+              );
+            } else {
+              return Center(child: CircularProgressIndicator());
+            }
+          }),
     );
   }
 }
@@ -320,7 +342,8 @@ class CustomPainterDraggable extends StatefulWidget {
   CustomPainterDraggable({this.image, this.globalKey}) : super(key: globalKey);
 
   @override
-  _CustomPainterDraggableState createState() => new _CustomPainterDraggableState();
+  _CustomPainterDraggableState createState() =>
+      new _CustomPainterDraggableState();
 }
 
 class _CustomPainterDraggableState extends State<CustomPainterDraggable> {
@@ -348,7 +371,8 @@ class _CustomPainterDraggableState extends State<CustomPainterDraggable> {
 
     // take all of the properties set from the crop and pass to a new custom painter that will trim the image down
     // without the crop lines
-    CroppedImagePainter painter = CroppedImagePainter(widget.image, xPos, yPos, height, width);
+    CroppedImagePainter painter =
+        CroppedImagePainter(widget.image, xPos, yPos, height, width);
 
     painter.paint(canvas, context.size);
 
@@ -357,7 +381,9 @@ class _CustomPainterDraggableState extends State<CustomPainterDraggable> {
 
   /// Is the point (x, y) inside the rect?
   bool _insideRect() {
-    bool inside = (xPos.ceil() <= (widget.image.width - width) && xPos.ceil() >= 0) && (yPos.ceil() <= (widget.image.height - height) && yPos.ceil() >= 0);
+    bool inside =
+        (xPos.ceil() <= (widget.image.width - width) && xPos.ceil() >= 0) &&
+            (yPos.ceil() <= (widget.image.height - height) && yPos.ceil() >= 0);
     // set state if out of bounds
     if (!inside) {
       updatePositionState();
@@ -449,7 +475,8 @@ class _CustomPainterDraggableState extends State<CustomPainterDraggable> {
       child: Container(
         color: Colors.white,
         child: CustomPaint(
-          painter: CropImagePainter(Rect.fromLTWH(xPos, yPos, width, height), widget.image),
+          painter: CropImagePainter(
+              Rect.fromLTWH(xPos, yPos, width, height), widget.image),
           child: Container(),
         ),
       ),
@@ -461,17 +488,16 @@ class CropImagePainter extends CustomPainter {
   CropImagePainter(this.rect, this.image);
   final Rect rect;
   final ui.Image image;
-  final BorderSide borderSide = BorderSide(width: 10.0, color: Colors.lightBlue.shade50, style: BorderStyle.solid);
+  final BorderSide borderSide = BorderSide(
+      width: 10.0, color: Colors.lightBlue.shade50, style: BorderStyle.solid);
 
   @override
   void paint(Canvas canvas, Size size) {
-
     // draw the full size image onto the canvas
     canvas.drawImage(image, Offset(0.0, 0.0), Paint());
 
     // draws an overlay that is opaque
-    final paintOverlay =  Paint()
-      ..color = Colors.black12.withOpacity(0.4);
+    final paintOverlay = Paint()..color = Colors.black12.withOpacity(0.4);
     canvas.drawPath(
       Path.combine(
         PathOperation.difference,
@@ -493,10 +519,11 @@ class CropImagePainter extends CustomPainter {
     final p7 = Offset(rect.left, rect.top + rect.height - (rect.height / 6));
     final p8 = Offset(rect.left, rect.top + rect.height);
     final p9 = Offset(rect.left + (rect.width / 6), rect.top + rect.height);
-    final p10 = Offset(rect.left + rect.width, rect.top + rect.height - (rect.height / 6));
+    final p10 = Offset(
+        rect.left + rect.width, rect.top + rect.height - (rect.height / 6));
     final p11 = Offset(rect.left + rect.width, rect.top + rect.height);
-    final p12 = Offset(rect.left + rect.width - (rect.width / 6), rect.top + rect.height);
-
+    final p12 = Offset(
+        rect.left + rect.width - (rect.width / 6), rect.top + rect.height);
 
     final paint = Paint()
       ..color = Colors.white
@@ -525,7 +552,8 @@ class CropImagePainter extends CustomPainter {
 }
 
 class CroppedImagePainter extends CustomPainter {
-  CroppedImagePainter(this.image, this.xPos, this.yPos, this.width, this.height);
+  CroppedImagePainter(
+      this.image, this.xPos, this.yPos, this.width, this.height);
   final image;
   final xPos;
   final yPos;

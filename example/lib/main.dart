@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_uploader/photo_uploader.dart';
+import 'dart:ui' as ui;
+import 'package:photo_uploader/upload_helper.dart';
 
 Future<void> main() async {
   // Ensure that plugin services are initialized so that `availableCameras()`
@@ -18,10 +21,16 @@ Future<void> main() async {
     MaterialApp(
       theme: ThemeData.dark(),
       home: TakePictureScreen(
-        // Pass the appropriate camera to the TakePictureScreen widget.
-        camera: firstCamera,
-        cameras: cameras,
-      ),
+          // Pass the appropriate camera to the TakePictureScreen widget.
+          camera: firstCamera,
+          cameras: cameras,
+          onUpload: (ui.Image image) async {
+            UploadHelper _uploadHelper = new UploadHelper();
+            Uint8List bytes = await _uploadHelper.getPngByteData(image: image);
+            var response = await _uploadHelper.uploadBytes(
+                url: 'https://postman-echo.com/post', bytes: bytes);
+            print(response);
+          }),
     ),
   );
 }

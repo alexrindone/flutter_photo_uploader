@@ -5,14 +5,22 @@ Flutter Photo Uploader is a Flutter package which uses the Camera package to tak
 
 ## Usage
 
-To use this package, add flutter_photo_uploader as a dependency in your pubsec.yaml file.
+To use this package, add flutter_photo_uploader as a dependency in your pubsec.yaml file. 
+For android, You must have to update minSdkVersion to 21 (or higher). On iOS, lines below have to be added inside ios/Runner/Info.plist in order the access the camera.
+```
+<key>NSCameraUsageDescription</key>
+<string>Explanation on why the camera access is needed.</string>
+```
 
 ## Example
 
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_uploader/photo_uploader.dart';
+import 'dart:ui' as ui;
+import 'package:photo_uploader/upload_helper.dart';
 
 Future<void> main() async {
   // Ensure that plugin services are initialized so that `availableCameras()`
@@ -32,8 +40,13 @@ Future<void> main() async {
         // Pass the appropriate camera to the TakePictureScreen widget.
         camera: firstCamera,
         cameras: cameras,
+        onUpload: (ui.Image image) async {
+          UploadHelper _uploadHelper = new UploadHelper();
+          Uint8List bytes = await _uploadHelper.getPngByteData(image: image);
+          var response = await _uploadHelper.uploadBytes(url: 'https://postman-echo.com/post', bytes: bytes);
+          print(response);
+        }),
       ),
-    ),
   );
 }
 
