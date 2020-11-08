@@ -328,6 +328,9 @@ class DisplayPictureScreen extends StatelessWidget {
                   )
                 ],
               );
+            } else if (snapshot.hasError) {
+              print(snapshot.error);
+              return Container(child: Text(snapshot.error),);
             } else {
               return Center(child: CircularProgressIndicator());
             }

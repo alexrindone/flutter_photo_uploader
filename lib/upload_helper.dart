@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'dart:ui' as ui;
 
-class UploadHelper {
+class UploadHelper extends http.BaseClient {
   Map<String, String> requestHeaders;
 
   static UploadHelper _instance;
@@ -108,5 +108,9 @@ class UploadHelper {
     ByteData byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     Uint8List pngBytes = byteData.buffer.asUint8List();
     return pngBytes;
+  }
+
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    return this.client.send(request);
   }
 }

@@ -17,6 +17,14 @@ Future<void> main() async {
   // Get a specific camera from the list of available cameras.
   final firstCamera = cameras.first;
 
+  Future upload(ui.Image image) async {
+    UploadHelper _uploadHelper = new UploadHelper();
+    Uint8List bytes = await _uploadHelper.getPngByteData(image: image);
+    var response = await _uploadHelper.uploadBytes(
+        url: 'https://postman-echo.com/post', bytes: bytes);
+    print(response);
+  }
+
   runApp(
     MaterialApp(
       theme: ThemeData.dark(),
@@ -24,13 +32,8 @@ Future<void> main() async {
           // Pass the appropriate camera to the TakePictureScreen widget.
           camera: firstCamera,
           cameras: cameras,
-          onUpload: (ui.Image image) async {
-            UploadHelper _uploadHelper = new UploadHelper();
-            Uint8List bytes = await _uploadHelper.getPngByteData(image: image);
-            var response = await _uploadHelper.uploadBytes(
-                url: 'https://postman-echo.com/post', bytes: bytes);
-            print(response);
-          }),
+          onUpload: upload
+      ),
     ),
   );
 }
