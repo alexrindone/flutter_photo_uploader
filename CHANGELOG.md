@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.2
+- Updating dependencies
+
 ## 0.1.1
 - Updating format of files with dartfmt
 
