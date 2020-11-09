@@ -1,6 +1,6 @@
 name: photo_uploader
 description: Flutter Photo Uploader is a Flutter package which uses the Camera package to take a picture, crop it, and post the data to an endpoint.
-version: 0.0.1
+version: 0.1.0
 author: Alex Rindone
 homepage: https://nubeer.io
 

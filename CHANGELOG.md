@@ -1,3 +1,5 @@
-## [0.0.1] - TODO: Add release date.
+# Changelog
 
-* TODO: Describe initial release.
+## 0.1.0
+Initial Release
+- Delivering an easy to use widget that utilizes the camera package and http package to take, crop, and upload an image to an endpoint
