@@ -11,14 +11,10 @@ import 'crop_preview.dart';
 
 // A screen that allows users to take a picture using a given camera.
 class TakePictureScreen extends StatefulWidget {
-
   // passed in function for upload button
   final Function(ui.Image) onUpload;
 
-  const TakePictureScreen(
-      {Key key,
-      @required this.onUpload})
-      : super(key: key);
+  const TakePictureScreen({Key key, @required this.onUpload}) : super(key: key);
 
   @override
   TakePictureScreenState createState() => TakePictureScreenState();
@@ -346,7 +342,9 @@ class DisplayPictureScreen extends StatelessWidget {
               );
             } else if (snapshot.hasError) {
               print(snapshot.error);
-              return Container(child: Text(snapshot.error),);
+              return Container(
+                child: Text(snapshot.error),
+              );
             } else {
               return Center(child: CircularProgressIndicator());
             }

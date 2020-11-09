@@ -22,9 +22,7 @@ Future<void> main() async {
   runApp(
     MaterialApp(
       theme: ThemeData.dark(),
-      home: TakePictureScreen(
-          onUpload: upload
-      ),
+      home: TakePictureScreen(onUpload: upload),
     ),
   );
 }
