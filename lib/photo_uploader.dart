@@ -11,14 +11,12 @@ import 'crop_preview.dart';
 
 // A screen that allows users to take a picture using a given camera.
 class TakePictureScreen extends StatefulWidget {
-  final CameraDescription camera;
-  final List<CameraDescription> cameras;
+
+  // passed in function for upload button
   final Function(ui.Image) onUpload;
 
   const TakePictureScreen(
       {Key key,
-      @required this.camera,
-      @required this.cameras,
       @required this.onUpload})
       : super(key: key);
 
@@ -29,18 +27,35 @@ class TakePictureScreen extends StatefulWidget {
 class TakePictureScreenState extends State<TakePictureScreen> {
   CameraController _controller;
   Future<void> _initializeControllerFuture;
+  List<CameraDescription> cameras;
   int selectedCameraIdx = 0; // set default front camera
-  void toggleCamera(int index) async {
+
+  void setCameraState(int index) async {
+    // get available cameras, and set the cameras with the result
+    await availableCameras().then((result) {
+      cameras = result;
+    }).catchError((e) {
+      throw Exception('Camera(s) not available');
+    });
+
+    if (cameras == null || cameras.length == 0) {
+      throw Exception('Camera(s) not available');
+    }
+
+    // check for controller, if it's not null then dispose it
     if (_controller != null) {
       await _controller.dispose();
     }
+
+    // set camera controller...eventually allow for different resolutions here
     CameraController _camCtrl = CameraController(
       // Get a specific camera from the list of available cameras.
-      widget.cameras[index],
+      cameras[index],
       // Define the resolution to use.
       ResolutionPreset.max,
     );
 
+    // set state asyncronously
     setState(() {
       _controller = _camCtrl;
       selectedCameraIdx = index;
@@ -51,7 +66,8 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   @override
   void initState() {
     super.initState();
-    toggleCamera(selectedCameraIdx);
+    // set the initial state of the cameras
+    setCameraState(selectedCameraIdx);
   }
 
   @override
@@ -101,7 +117,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                                 // if it was 0, set it to 1, if it was 1, set it to 0
                                 int toggleIndex =
                                     selectedCameraIdx == 0 ? 1 : 0;
-                                toggleCamera(toggleIndex);
+                                setCameraState(toggleIndex);
                               },
                             ),
                             Center(
