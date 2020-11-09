@@ -1,9 +1,8 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:camera/camera.dart';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:photo_uploader/photo_uploader.dart';
-import 'dart:ui' as ui;
 import 'package:photo_uploader/upload_helper.dart';
 
 Future<void> main() async {
@@ -11,12 +10,7 @@ Future<void> main() async {
   // can be called before `runApp()`
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Obtain a list of the available cameras on the device.
-  final cameras = await availableCameras();
-
-  // Get a specific camera from the list of available cameras.
-  final firstCamera = cameras.first;
-
+  // A future that will call an endpoint, passing in your image byte data
   Future upload(ui.Image image) async {
     UploadHelper _uploadHelper = new UploadHelper();
     Uint8List bytes = await _uploadHelper.getPngByteData(image: image);
@@ -29,9 +23,6 @@ Future<void> main() async {
     MaterialApp(
       theme: ThemeData.dark(),
       home: TakePictureScreen(
-          // Pass the appropriate camera to the TakePictureScreen widget.
-          camera: firstCamera,
-          cameras: cameras,
           onUpload: upload
       ),
     ),
