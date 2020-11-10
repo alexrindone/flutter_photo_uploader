@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'dart:ui' as ui;
+import 'package:camera/camera.dart' as cam;
 
 class UploadHelper extends http.BaseClient {
   Map<String, String> requestHeaders;
@@ -21,6 +23,16 @@ class UploadHelper extends http.BaseClient {
 
   set headers(Map values) {
     this.requestHeaders = values;
+  }
+
+  // wrapper for camera available cameras method
+  Future<bool> available() async {
+    return await cam.availableCameras().then((value) {
+      // return true if we have a cameras array with camera otherwise false
+      return value != null && value.length > 0 ? true : false;
+    }).catchError((err) {
+      return false;
+    });
   }
 
   void resetHeaders() {
