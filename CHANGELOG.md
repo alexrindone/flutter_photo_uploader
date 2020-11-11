@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.0
+- Adding helper function to wrap availableCameras() to UploadHelper class
+
 ## 0.1.2
 - Updating dependencies
 
