@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/basic.dart';
 import 'package:photo_uploader/photo_uploader.dart';
 import 'package:photo_uploader/upload_helper.dart';
 
@@ -37,6 +36,7 @@ class _FirstPageState extends State<FirstPage> {
     storedFuture = helper.available();
   }
 
+  // a future to pass in as the upload function
   Future upload(ui.Image image) async {
     Uint8List bytes = await helper.getPngByteData(image: image);
     var response = await helper.uploadBytes(
@@ -44,25 +44,57 @@ class _FirstPageState extends State<FirstPage> {
     print(response);
   }
 
+  // use a future to make sure we have access to camera before showing a screen
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
         future: storedFuture,
         builder: (context, snapshot) {
+          List<Widget> children;
           // if we have access to cameras, show TakePictureScreen widget
-          if (snapshot.hasData && snapshot.data == true) {
+          if (snapshot.hasData && snapshot.data) {
             return TakePictureScreen(onUpload: upload);
-          } else {
-            return Container(
-              height: MediaQuery.of(context).size.height,
-              width: MediaQuery.of(context).size.height,
-              child: Center(
-                  child: Text(
+          } else if (snapshot.hasError) {
+            // if we got an error when trying to check cameras
+            children = <Widget>[
+              Icon(
+                Icons.error_outline,
+                color: Colors.red,
+                size: 60,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Text('Error: ${snapshot.error}'),
+              )
+            ];
+          } else if (snapshot.hasData && !snapshot.data) {
+            children = <Widget>[
+              Text(
                 'Cameras not found.',
                 style: TextStyle(color: Colors.white, fontSize: 24),
-              )),
-            );
+              ),
+            ];
+          } else {
+            children = <Widget>[
+              SizedBox(
+                child: CircularProgressIndicator(),
+                width: 60,
+                height: 60,
+              ),
+              const Padding(
+                padding: EdgeInsets.only(top: 16),
+                child: Text('Awaiting result...'),
+              )
+            ];
           }
+          // default return either cameras not found, error, or loading
+          return Container(
+            height: MediaQuery.of(context).size.height,
+            width: MediaQuery.of(context).size.height,
+            child: Column(
+              children: children,
+            ),
+          );
         });
   }
 }
