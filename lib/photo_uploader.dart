@@ -364,14 +364,14 @@ class CustomPainterDraggable extends StatefulWidget {
 }
 
 class _CustomPainterDraggableState extends State<CustomPainterDraggable> {
-  var xPos = 0.0;
-  var yPos = 0.0;
-  var width = 600.0;
-  var height = 600.0;
+  double xPos = 0.0;
+  double yPos = 0.0;
+  double width = 600.0;
+  double height = 600.0;
   final pad = 10; // use this to prevent going over the edge
-  var startingXPos = 0.0;
-  var startingYPos = 0.0;
-  var startingScale = 1.0;
+  double startingXPos = 0.0;
+  double startingYPos = 0.0;
+  double startingScale = 1.0;
 
   bool _dragging = false;
 
@@ -379,6 +379,16 @@ class _CustomPainterDraggableState extends State<CustomPainterDraggable> {
   void initState() {
     // TODO: implement initState
     super.initState();
+
+    // makes it so that we show the cropper full width of the image from the get go
+    width = widget.image.width.toDouble();
+    height = widget.image.width.toDouble();
+  }
+
+  @override
+  void dispose() {
+    widget.image.dispose();
+    super.dispose();
   }
 
   // this renders a cropped painter to an image

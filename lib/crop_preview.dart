@@ -54,7 +54,7 @@ class CropPreview extends StatelessWidget {
                       child: Icon(Icons.arrow_back,
                           color: Colors.white, size: 28.0),
                     ),
-                    onTap: () {
+                    onTap: () async {
                       Navigator.pop(context);
                     },
                   ),

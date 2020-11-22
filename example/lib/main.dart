@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:photo_uploader/photo_uploader.dart';
 import 'package:photo_uploader/upload_helper.dart';
+import 'dart:convert';
 
 void main() {
   // can be called before `runApp()`
@@ -28,6 +29,7 @@ class FirstPage extends StatefulWidget {
 
 class _FirstPageState extends State<FirstPage> {
   UploadHelper helper = new UploadHelper();
+
   Future<bool> storedFuture;
 
   @override
@@ -38,10 +40,20 @@ class _FirstPageState extends State<FirstPage> {
 
   // a future to pass in as the upload function
   Future upload(ui.Image image) async {
-    Uint8List bytes = await helper.getPngByteData(image: image);
-    var response = await helper.uploadBytes(
-        url: 'https://postman-echo.com/post', bytes: bytes);
-    print(response);
+    try {
+      Uint8List bytes = await helper.getPngByteData(image: image);
+
+      var response = await helper.uploadBytes(
+          url: 'https://postman-echo.com/post', bytes: bytes, targetWidth: 100, targetHeight: 100);
+
+      Map<String, dynamic> decodedResponse = jsonDecode(response.body);
+      print(decodedResponse);
+
+      image.dispose();
+
+    } catch(e) {
+      print(e);
+    }
   }
 
   // use a future to make sure we have access to camera before showing a screen

@@ -1,6 +1,6 @@
 # flutter_photo_uploader
 
-Flutter Photo Uploader is a Flutter package which uses the Camera package to take a picture, crop it, and post the data to an endpoint. It's simple and lightweight! It's currently a work in progress with tests being added in the near future. Functionality is also pretty limited right now but it is very easy to use. Images can only be cropped as squares with additional functionality being added to handle all types of cropping.
+Flutter Photo Uploader is a Flutter package which uses the Camera package to take a picture, crop it, and post the data to an endpoint. It's simple and lightweight! You can specify a target width and target height for the image during upload as well. It's currently a work in progress with tests being added in the near future. Functionality is also pretty limited right now but it is very easy to use. Images can only be cropped as squares with additional functionality being added to handle all types of cropping.
 
 
 ## Usage
@@ -56,7 +56,7 @@ class _FirstPageState extends State<FirstPage> {
   Future upload(ui.Image image) async {
     Uint8List bytes = await helper.getPngByteData(image: image);
     var response = await helper.uploadBytes(
-        url: 'https://postman-echo.com/post', bytes: bytes);
+        url: 'https://postman-echo.com/post', bytes: bytes, targetWidth: 100, targetHeight: 100);
     print(response);
   }
 
@@ -91,4 +91,3 @@ Please email any issues, bugs, or additional features you would like to see buil
 ## Contributing
 
 If you wish to contribute to this package you may fork the repository and make a pull request to this repository.
-<br><br>**Note**: Testing by running `flutter test --coverage` will generate `coverage/lcov.info`. Running `bash test-coverage.sh` will parse the `lcov.info` file into JSON format. This happens automatically within the CI/CD pipeline on a pull request to master but it is always good to test locally.
