@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.3.1
+- updating meta dependency version
+
 ## 0.3.0
 - Crop screen now starts as full width for crop
 - Added targetHeight and targetWidth to make images get resized prior to upload function being called
