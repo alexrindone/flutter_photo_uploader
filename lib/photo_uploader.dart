@@ -32,9 +32,8 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   String selectedImage;
 
   Future getImage() async {
-    File pickedFile = await  ImagePicker.pickImage(
-        source: ImageSource.gallery, imageQuality: 100
-    );
+    File pickedFile = await ImagePicker.pickImage(
+        source: ImageSource.gallery, imageQuality: 100);
 
     setState(() {
       if (pickedFile != null) {
@@ -245,10 +244,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                                           builder: (context) =>
                                               DisplayPictureScreen(
                                                   imagePath: selectedImage,
-                                                  onUpload: widget.onUpload
-                                              )
-                                      )
-                                  );
+                                                  onUpload: widget.onUpload)));
                                 }
                               },
                             ),
