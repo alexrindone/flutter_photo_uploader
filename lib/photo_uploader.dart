@@ -8,6 +8,7 @@ import 'package:flutter/rendering.dart';
 import 'dart:ui';
 import 'package:path_provider/path_provider.dart';
 import 'crop_preview.dart';
+import 'package:image_picker/image_picker.dart';
 
 // A screen that allows users to take a picture using a given camera.
 class TakePictureScreen extends StatefulWidget {
@@ -25,6 +26,22 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   Future<void> _initializeControllerFuture;
   List<CameraDescription> cameras;
   int selectedCameraIdx = 0; // set default front camera
+
+  final picker = ImagePicker();
+
+  String selectedImage;
+
+  Future getImage() async {
+    File pickedFile = await  ImagePicker.pickImage(
+        source: ImageSource.gallery, imageQuality: 100
+    );
+
+    setState(() {
+      if (pickedFile != null) {
+        selectedImage = pickedFile.path;
+      }
+    });
+  }
 
   void setCameraState(int index) async {
     // get available cameras, and set the cameras with the result
@@ -211,9 +228,30 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                                 ),
                               ],
                             )),
-                            SizedBox(
-                              width: 30,
-                            )
+                            GestureDetector(
+                              // or insert_photo instead of photo_library
+                              child: Icon(
+                                Icons.photo_library,
+                                color: Colors.white,
+                                size: 28.0,
+                              ),
+                              onTap: () async {
+                                await getImage();
+                                if (selectedImage != null) {
+                                  // If the picture was taken, display it on a new screen.
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              DisplayPictureScreen(
+                                                  imagePath: selectedImage,
+                                                  onUpload: widget.onUpload
+                                              )
+                                      )
+                                  );
+                                }
+                              },
+                            ),
                           ],
                         ),
                       )

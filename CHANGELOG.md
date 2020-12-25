@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.3
+- Adding image picker dependency and checking for access to media
+
+## 0.3.2
+- Adding loading spinner to indicate image is uploading
+
 ## 0.3.1
 - updating meta dependency version
 
